@@ -48,12 +48,22 @@ function kuberes {
 }
 export -f kuberes
 
-#function kubepods { kubectl get pods -o wide  --no-headers | grep  Running | sort -k7b,7 -k1,1 -s | awk 'BEGIN {stor=$7} {if(stor != $7){print ""} print $0; stor=$7}' | sed -e 's/<none>//g' -e 's/[ ]\+$//'; }
+# kubepods: k8s pods grouped and sorted by nodes they run on
 function kubepods {
   if [[ -n $1 ]] && [[ $1 == "-A" ]] ; then
-    kubectl get pods -A -o wide | grep -v "Completed" | sort -k8b,8 -k1,1 -s | awk 'BEGIN {stor=$8} {if(stor != $8){print ""} print $0; stor=$8}' | sed -e 's/\.us-east-2.compute.internal.*//' -e 's/NOMINATED NODE.*//' | column -te
+    kubectl get pods -A -o wide --no-headers | \
+      grep -v "Completed" | \
+      sort -k8b,8 -k1,1 -s | \
+      awk 'BEGIN {stor=$8} {if(stor != $8){print ""} print $0; stor=$8}' | \
+      sed -e 's/<none>//g' -e 's/[ ]\+$//' | \
+      column -te
   else
-    kubectl get pods    -o wide | grep -v "Completed" | sort -k7b,7 -k1,1 -s | awk 'BEGIN {stor=$7} {if(stor != $7){print ""} print $0; stor=$7}' | sed -e 's/\.us-east-2.compute.internal.*//' -e 's/NOMINATED NODE.*//' | column -te
+    kubectl get pods    -o wide --no-headers | \
+      grep -v "Completed" | \
+      sort -k7b,7 -k1,1 -s | \
+      awk 'BEGIN {stor=$7} {if(stor != $7){print ""} print $0; stor=$7}' | \
+      sed -e 's/<none>//g' -e 's/[ ]\+$//' | \
+      column -te
   fi
 }
 export -f kubepods
