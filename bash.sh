@@ -38,7 +38,14 @@ function kubeuns {
 }
 export -f kubeuns
 
-function kuberes { kubectl get no -o json | jq -r '.items[] | [.metadata.labels."beta.kubernetes.io/instance-type", "cpu:", .status.allocatable.cpu, "of", .status.capacity.cpu, "ram:", .status.allocatable.memory, "of", .status.capacity.memory, "type:", .metadata.labels."purpose", .metadata.name] | @tsv' | sort | sed -e 's/\tof\t/ of /g'; }
+# kuberes: k8s nodes with their resources (cpu, memory) allocatable of capacity
+function kuberes {
+  kubectl get no -o json | \
+    jq -r '.items[].status | 
+      [ "cpu: ", .allocatable.cpu, "of", .capacity.cpu, "mem: ", .allocatable.memory, "of", .capacity.memory] as $res | 
+      [ $res[], [.addresses[] | select(.type=="InternalIP" or .type=="ExternalIP" or .type=="Hostname") | .address][] ] 
+      | @tsv' | sed -e 's/\tof\t/\//g' | sort -k5
+}
 export -f kuberes
 
 #function kubepods { kubectl get pods -o wide  --no-headers | grep  Running | sort -k7b,7 -k1,1 -s | awk 'BEGIN {stor=$7} {if(stor != $7){print ""} print $0; stor=$7}' | sed -e 's/<none>//g' -e 's/[ ]\+$//'; }
