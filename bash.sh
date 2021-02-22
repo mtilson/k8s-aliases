@@ -24,7 +24,7 @@ function kubeall {
 export -f kubeall
 
 # kubeuns: k8s objects non-namespaced = UNname-Spased
-function kubeuns { 
+function kubeuns {
   local tmpfile=$(mktemp)
   kubectl api-resources --namespaced=false --no-headers | awk "{print \$1}" | sort | uniq | \
     while read i ; do
@@ -41,9 +41,9 @@ export -f kubeuns
 # kuberes: k8s nodes with their resources (cpu, memory) allocatable of capacity
 function kuberes {
   kubectl get no -o json | \
-    jq -r '.items[].status | 
-      [ "cpu: ", .allocatable.cpu, "of", .capacity.cpu, "mem: ", .allocatable.memory, "of", .capacity.memory] as $res | 
-      [ $res[], [.addresses[] | select(.type=="InternalIP" or .type=="ExternalIP" or .type=="Hostname") | .address][] ] 
+    jq -r '.items[].status |
+      [ "cpu: ", .allocatable.cpu, "of", .capacity.cpu, "mem: ", .allocatable.memory, "of", .capacity.memory] as $res |
+      [ $res[], [.addresses[] | select(.type=="InternalIP" or .type=="ExternalIP" or .type=="Hostname") | .address][] ]
       | @tsv' | sed -e 's/\tof\t/\//g' | sort -k5
 }
 export -f kuberes
@@ -67,3 +67,18 @@ function kubepods {
   fi
 }
 export -f kubepods
+
+# eksnodes: EKS nodes sorted by their names and grouped by their nodegroups
+function eksnodes {
+  kubectl get nodes -o json | \
+    jq -r '.items[] |
+    [ .metadata.labels."eks.amazonaws.com/nodegroup" as $ng |
+    [ .status.addresses[] | select(.type=="InternalIP") | .address][], $ng ]
+    | @tsv' | \
+    column -t | \
+    sed 's/-/#/g' | \
+    sort -t'#' -k2 -k1 -s | \
+    sed 's/#/-/g' | \
+    awk 'BEGIN {stor=$2} {if(stor != $2){print ""} print $0; stor=$2}'
+}
+export -f eksnodes

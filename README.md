@@ -1,3 +1,7 @@
+## Idea
+
+* The main idea is to create 'kubectl' aliases to be the only tools used in helping to show status and debug K8s/EKS/GKE/... clusters and their workloads
+
 ### Installation
 
 * `bash`
@@ -11,3 +15,5 @@ source $HOME/.bash_aliases
 ```
 TODO
 ```
+### TODO
+* show nodes (sorted by node's names) with their pods - to understand which node groups can be deleted
