@@ -72,9 +72,11 @@ export -f kubepods
 function eksnodes {
   kubectl get nodes -o json | \
     jq -r '.items[] |
-    [ .metadata.labels."eks.amazonaws.com/nodegroup" as $ng |
-    [ .status.addresses[] | select(.type=="InternalIP") | .address][], $ng ]
-    | @tsv' | \
+    .metadata.labels."eks.amazonaws.com/nodegroup" as $ng |
+    [ [.status.addresses[] | select(.type=="InternalIP") | .address][],
+      $ng,
+      [.status.conditions[] | select(.type=="Ready") | .reason][]
+    ] | @tsv' | \
     column -t | \
     sed 's/-/#/g' | \
     sort -t'#' -k2 -k1 -s | \
