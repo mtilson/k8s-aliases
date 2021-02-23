@@ -84,3 +84,28 @@ function eksnodes {
     awk 'BEGIN {stor=$2} {if(stor != $2){print ""} print $0; stor=$2}'
 }
 export -f eksnodes
+
+# eksngrp: EKS node groups with their nodes and the node's pods
+function eksngrp {
+  local tmpfile=$(mktemp)
+  kubectl get nodes -o json | \
+    jq -r '.items[] |
+    .metadata.labels."eks.amazonaws.com/nodegroup" as $ng |
+    [ [.status.addresses[] | select(.type=="InternalIP") | .address][],
+      $ng
+    ] | @tsv' | \
+    column -t | \
+    awk '{print "s/" $1 "/" $2 " " $1 "/";}' > $tmpfile.sed
+
+  kubectl get pods -A -o json | \
+    jq -r '.items[] | .status.hostIP as $ip | [ $ip, .metadata.namespace, .metadata.name ] | @tsv' | \
+    sed -f $tmpfile.sed | \
+    column -t | \
+    sed 's/-/#/g' | \
+    sort -t'#' -s | \
+    sed 's/#/-/g' | \
+    awk 'BEGIN {stor=$2} {if(stor != $2){print ""} print $0; stor=$2}'
+
+  rm -fr $tmpfile.sed
+}
+export -f eksngrp

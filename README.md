@@ -13,7 +13,3 @@ source $HOME/.bash_aliases
 ```
 * `zsh`
 ```
-TODO
-```
-### TODO
-* show nodes (sorted by node's names) with their pods - to understand which node groups can be deleted
