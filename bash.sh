@@ -73,8 +73,10 @@ function eksnodes {
   kubectl get nodes -o json | \
     jq -r '.items[] |
     .metadata.labels."eks.amazonaws.com/nodegroup" as $ng |
+    .metadata.name as $name |
     [ [.status.addresses[] | select(.type=="InternalIP") | .address][],
       $ng,
+      $name,
       [.status.conditions[] | select(.type=="Ready") | .reason][]
     ] | @tsv' | \
     column -t | \
