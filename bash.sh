@@ -97,7 +97,7 @@ function eksngrp {
       $ng
     ] | @tsv' | \
     column -t | \
-    awk '{print "s/" $1 "/" $2 " " $1 "/";}' > $tmpfile.sed
+    awk '{print "s/" $1 "\t/" $2 " " $1 " /";}' > $tmpfile.sed
 
   kubectl get pods -A -o json | \
     jq -r '.items[] | .status.hostIP as $ip | [ $ip, .metadata.namespace, .metadata.name ] | @tsv' | \
