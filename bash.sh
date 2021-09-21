@@ -111,3 +111,28 @@ function eksngrp {
   rm -fr $tmpfile.sed
 }
 export -f eksngrp
+
+# helmsec: content of helm secret
+# kubectl get secret sh.helm.release.v1.myrel.v1 -o go-template='{{.data.release | base64decode | base64decode}}' | gzip -d | jq
+# see https://gist.github.com/DzeryCZ/c4adf39d4a1a99ae6e594a183628eaee
+helmsec () {
+    local fetchSecretJson
+    local doesSecretExist
+    if [[ -z "${1}" ]]; then
+        echo "Missing secret name. Terminating"
+        exit 1
+    else
+        if [[ "${1}" == *"sh.helm.release"* ]]; then
+            fetchSecretJson=$(kubectl get secret --ignore-not-found --all-namespaces --output json --field-selector "metadata.name=${1}")
+            doesSecretExist=$(echo "${fetchSecretJson}" | jq --raw-output 'if (.items | length) > 0 then "true" else empty end')
+            if [[ "${doesSecretExist}" == "true" ]]; then
+                echo "${fetchSecretJson}" | jq --raw-output '.items[0].data.release' | base64 -d | base64 -d | gzip -d
+            else
+                echo "There is no such helm secret on this cluster"
+            fi
+        else
+            echo "This is not a helm secret :("
+        fi
+    fi
+}
+export -f helmsec
